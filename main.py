@@ -1,10 +1,10 @@
+from BD.db_config import db_params
 from BD.db_manager import DBManager
 
 
 def main():
     try:
         # Параметры подключения к базе данных PostgreSQL.
-        db_params = {'dbname': 'mydatabase', 'user': 'postgres', 'password': 'sqlUSER', 'host': 'localhost'}
         db_manager = DBManager(**db_params)
 
         # Меню для взаимодействия с пользователем
@@ -51,9 +51,6 @@ def main():
 
     except Exception as e:
         print(f"{e}")
-    finally:
-        # Закрытие соединения с базой данных
-        db_manager.close_connection()
 
 
 if __name__ == "__main__":
