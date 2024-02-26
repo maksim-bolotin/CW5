@@ -1,1 +1,1 @@
-db_params = {'dbname': 'mydatabase', 'user': 'postgres', 'password': 'sqlUSER', 'host': 'localhost'}
+db_params = {'dbname': '', 'user': 'postgres', 'password': '', 'host': 'localhost'}
