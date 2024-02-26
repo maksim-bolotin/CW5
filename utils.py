@@ -10,23 +10,22 @@ def create_tables_and_insert_data():
 
         # Создание таблиц
         db_manager.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS employers (
-                employers_id SERIAL PRIMARY KEY,
-                employers_name VARCHAR(255),
-                description TEXT
-            );
+        create table employers (
+        employers_id int PRIMARY KEY,
+        employers_name varchar(255) NOT NULL
+        );
         ''')
 
         db_manager.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS vacancies (
-                id_vacancies SERIAL PRIMARY KEY,
-                title VARCHAR(255),
-                salary_from VARCHAR(100),
-                salary_to VARCHAR(100),
-                description TEXT,
-                url TEXT,
-                employers_id INT REFERENCES employers(employers_id)
-            );
+        create table vacancies (
+        id_vacancies int primary key,
+        title varchar(255),
+        salary_from VARCHAR(100), 
+        salary_to VARCHAR(100),
+        description VARCHAR(255),
+        url VARCHAR(100),
+        employers_id int references employers(employers_id)
+        );
         ''')
 
         # Список компаний
@@ -36,31 +35,24 @@ def create_tables_and_insert_data():
         for company in companies:
             data = get_hh_data(company)
 
-            # Проверяем, есть ли такая компания в базе данных
-            db_manager.cursor.execute("SELECT employers_id FROM employers WHERE employers_name = %s;", (company,))
-            existing_employer_id = db_manager.cursor.fetchone()
+            employer_id = data[0]['employer']['id']
+            employer_name = company
 
-            # Если нет, добавляем компанию в базу
-            if not existing_employer_id:
-                db_manager.cursor.execute("INSERT INTO employers (employers_name) VALUES (%s) RETURNING employers_id;",
-                                          (company,))
-                employer_id = db_manager.cursor.fetchone()[0]
-            else:
-                employer_id = existing_employer_id[0]
+            # Добавление компании в базу данных
+            db_manager.cursor.execute("INSERT INTO employers VALUES (%s, %s);",
+                                      (employer_id, employer_name))
 
-            # Добавление вакансий в базу данных
             for vacancy in data:
-                title = vacancy.get('name', '')
-                description = vacancy.get('snippet', {}).get('requirement', '')
-                salary_from = vacancy.get('salary', {}).get('from', '')
-                salary_to = vacancy.get('salary', {}).get('to', '')
-                url = vacancy.get('url', '')
+                id_vacancies = vacancy['id']
+                title = vacancy['name']
+                description = vacancy['snippet']['requirement']
+                salary_from = vacancy.get('salary', {}).get('from', 0)
+                salary_to = vacancy.get('salary', {}).get('to', 0)
+                url = vacancy['alternate_url']
 
                 # Добавление вакансии в базу данных
-                db_manager.cursor.execute("""
-                    INSERT INTO vacancies (employers_id, title, salary_from, salary_to, url, description)
-                    VALUES (%s, %s, %s, %s, %s, %s) RETURNING id_vacancies;
-                """, (employer_id, title, salary_from, salary_to, url, description))
+                db_manager.cursor.execute("INSERT INTO vacancies VALUES (%s, %s, %s, %s, %s, %s);",
+                                          (id_vacancies, title, salary_from, salary_to, description, url))
 
         # Закрытие соединения с базой данных
         db_manager.close_connection()
