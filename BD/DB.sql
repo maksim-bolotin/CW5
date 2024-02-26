@@ -2,19 +2,19 @@
 CREATE DATABASE mydatabase;
 
 -- Создание таблицы работодателей
-CREATE TABLE employers (
-    employers_id int PRIMARY KEY,
-    employers_name varchar(50) NOT NULL,
-    description TEXT
-);
+create table employers (
+employers_id int primary key,
+employers_name varchar(255),
+description TEXT);
+
 
 -- Создание таблицы вакансий с ссылкой на таблицу работодателей
-CREATE TABLE vacancies (
-    id_vacancies int PRIMARY KEY,
-    employers_id int REFERENCES employers(employers_id),
-    title varchar(100) NOT NULL,
-    url varchar(100) NOT NULL,
-    salary_from varchar(100),
-    salary_to varchar(100),
-    description TEXT
+create table vacancies (
+id_vacancies serial primary key,
+title varchar(255),
+salary_from VARCHAR(100),
+salary_to VARCHAR(100),
+description text,
+url text,
+employers_id int references employers(employers_id));
 );
