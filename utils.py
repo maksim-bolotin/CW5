@@ -1,4 +1,3 @@
-from BD.db_config import db_params
 from BD.db_manager import DBManager
 from BD.head_hunter import get_hh_data
 
@@ -6,7 +5,7 @@ from BD.head_hunter import get_hh_data
 def create_tables_and_insert_data():
     try:
         # Параметры подключения к базе данных PostgreSQL.
-        db_manager = DBManager(**db_params)
+        db_manager = DBManager()
 
         # Создание таблиц
         db_manager.cursor.execute('''
@@ -29,32 +28,35 @@ def create_tables_and_insert_data():
         ''')
 
         # Список компаний
-        companies = ['Яндекс', 'Mail.Ru Group', 'Лаборатория Касперского', 'Luxoft', 'Сбер',
+        companies = ['Mail.Ru Group', 'Лаборатория Касперского', 'Luxoft', 'Сбер',
                      'OCS', '3Logic Group', 'Sitronics Group', 'Rubytech', 'Cloud.ru']
 
         for company in companies:
             data = get_hh_data(company)
-
             employer_id = data[0]['employer']['id']
-            employer_name = company
-
             # Добавление компании в базу данных
-            db_manager.cursor.execute("INSERT INTO employers VALUES (%s, %s);",
-                                      (employer_id, employer_name))
-
+            db_manager.cursor.execute("INSERT INTO employers VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+                                      (employer_id, company))
             for vacancy in data:
                 id_vacancies = vacancy['id']
-                title = vacancy['name']
-                description = vacancy['snippet']['requirement']
-                salary_from = vacancy.get('salary', {}).get('from', 0)
-                salary_to = vacancy.get('salary', {}).get('to', 0)
-                url = vacancy['alternate_url']
+                title = vacancy.get('name', '')
+                snippet = vacancy.get('snippet', {})
+                description = snippet.get('requirement', '') if snippet else ''
+                salary = vacancy.get('salary', {})
+                salary_from = salary.get('from', 0) if salary else 0
+                salary_to = salary.get('to', 0) if salary else 0
+                url = vacancy.get('alternate_url', '')
 
                 # Добавление вакансии в базу данных
-                db_manager.cursor.execute("INSERT INTO vacancies VALUES (%s, %s, %s, %s, %s, %s);",
-                                          (id_vacancies, title, salary_from, salary_to, description, url))
+                db_manager.cursor.execute(
+                    "INSERT INTO vacancies VALUES (%s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;",
+                    (id_vacancies, title, salary_from, salary_to, description, url, employer_id))
 
         # Закрытие соединения с базой данных
         db_manager.close_connection()
+
     except Exception as e:
         print(f"{e}")
+
+
+create_tables_and_insert_data()

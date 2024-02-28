@@ -1,11 +1,15 @@
 from BD.db_config import db_params
 from BD.db_manager import DBManager
+from utils import create_tables_and_insert_data
 
 
 def main():
     try:
         # Параметры подключения к базе данных PostgreSQL.
-        db_manager = DBManager(**db_params)
+        db_manager = DBManager()
+
+        # Создание таблиц и заполнение данными
+        create_tables_and_insert_data()
 
         # Меню для взаимодействия с пользователем
         while True:
